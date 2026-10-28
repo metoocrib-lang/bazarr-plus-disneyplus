@@ -1,5 +1,8 @@
 # Verificación del agente independiente
 
+Este informe corresponde al arranque inicial, antes de copiar la sesión y
+conectar Bazarr+. El resultado posterior está en [Migración](MIGRATION.md).
+
 Prueba aislada realizada el 27 de octubre de 2026, con autorización para
 construir y arrancar un contenedor nuevo. Código:
 `e5270e8c69345e53bbd141fa0029806aa3941f82`.

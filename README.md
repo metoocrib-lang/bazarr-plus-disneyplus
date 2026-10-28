@@ -5,8 +5,9 @@ y sesión privada en Docker. **No requiere Jellyfin ni su plugin.**
 
 Estado: experimental. La versión 0.2.1 separa el código del proyecto original.
 El flujo anterior se probó con episodios reales; esta separación pasó pruebas
-offline y de arranque en un contenedor aislado. Todavía no sustituye el agente
-del laboratorio existente ni tiene una sesión Disney+ configurada.
+offline y de arranque en un contenedor aislado. Después se migraron la sesión
+y la caché del laboratorio y se comprobó la conexión con Bazarr+ mediante el
+proveedor 0.2.1. La vigencia de la sesión en Disney+ sigue sin verificar.
 No está publicada en el Marketplace.
 
 ## Funcionamiento
