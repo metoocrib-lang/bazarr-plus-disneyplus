@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "provider_id": "moonfinbridge",
+  "name": "Disney+ (independent agent)",
+  "version": "0.2.1",
+  "description": "Disney+ subtitles through an independent private agent. Optional bounded wait during search; no Jellyfin plugin required.",
+  "api_version": "bazarr.provider-hub.v1",
+  "entry_module": "provider",
+  "entry_class": "MoonfinBridgeProvider",
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "agent_url",
+      "bridge_token",
+      "series_json"
+    ],
+    "properties": {
+      "agent_url": {
+        "type": "string",
+        "title": "Disney+ agent URL",
+        "description": "Private Docker URL reachable from Bazarr+ (e.g. http://disney-agent:8787)",
+        "minLength": 1
+      },
+      "bridge_token": {
+        "type": "string",
+        "title": "Bridge API token",
+        "secret": true,
+        "minLength": 32
+      },
+      "series_json": {
+        "type": "string",
+        "title": "Series map (TVDB to Disney+ URL and episode mappings)",
+        "description": "JSON array: [{\"tvdb_id\":123,\"series_url\":\"https://www.disneyplus.com/es-419/browse/entity-UUID\",\"mapping\":\"17x1-13=1x1\"}]",
+        "minLength": 2
+      },
+      "enable_requests": {
+        "type": "boolean",
+        "title": "Queue new extractions during search",
+        "description": "Opt-in: queue at most one extraction per search and wait for a ready SRT. Applies to manual AND scheduled searches; keep scheduled searches disabled until intentionally enabled.",
+        "default": false
+      },
+      "wait_seconds": {
+        "type": "integer",
+        "title": "Wait for extraction (seconds)",
+        "description": "0 returns immediately. Default 75, maximum 90. If still pending, search again later; polling does not enqueue more work. Provider Hub worker timeout must be at least 120 seconds.",
+        "minimum": 0,
+        "maximum": 90,
+        "default": 75
+      }
+    }
+  },
+  "secret_fields": [
+    "bridge_token"
+  ],
+  "supported_media": [
+    "episode"
+  ],
+  "languages": [
+    "spa"
+  ],
+  "files": {
+    "provider.py": "35894d8615b348890f474548c15f9eaa418e25dbae4fc5b0d50013a22b888cfc"
+  },
+  "bundle_sha256": "9d5fca79d105a20ae87e52ccfd1859291cad0ff7048aa723099a4a287a46265e",
+  "source": {
+    "type": "github",
+    "repo": "metoocrib-lang/bazarr-plus-disneyplus",
+    "ref": "main",
+    "commit": "0000000000000000000000000000000000000000",
+    "path": "provider",
+    "catalog_url": "https://github.com/LavX/bazarr-provider-catalog/blob/main/catalog.json",
+    "trusted": false
+  },
+  "dependencies": {
+    "requirements": []
+  }
+}

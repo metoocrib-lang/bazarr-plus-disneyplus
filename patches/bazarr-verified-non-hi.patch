@@ -1,0 +1,122 @@
+From d0c04eb4f9a22420d7425cc3b860ea3fac1e7602 Mon Sep 17 00:00:00 2001
+From: Codex <codex@local.invalid>
+Date: Tue, 27 Oct 2026 12:46:07 -0600
+Subject: [PATCH] Respect verified non-HI provider metadata when saving
+ subtitles
+
+---
+ custom_libs/subliminal_patch/core.py |  9 +++-
+ tests/test_save_hi_metadata.py       | 81 ++++++++++++++++++++++++++++
+ 2 files changed, 89 insertions(+), 1 deletion(-)
+ create mode 100644 tests/test_save_hi_metadata.py
+
+diff --git a/custom_libs/subliminal_patch/core.py b/custom_libs/subliminal_patch/core.py
+index 6e44b0f..ec3a41f 100644
+--- a/custom_libs/subliminal_patch/core.py
++++ b/custom_libs/subliminal_patch/core.py
+@@ -2075,7 +2075,14 @@ def save_subtitles(file_path, subtitles, single=False, directory=None, chmod=Non
+             continue
+ 
+         # create subtitle path
+-        if (subtitle.text and subtitle.format == 'srt' and (hasattr(subtitle.language, 'hi') and
++        # Explicit, verifiable non-HI metadata takes precedence over punctuation.
++        # Missing metadata must still use the heuristic; a default False on the
++        # legacy hearing_impaired flag is not an explicit provider declaration.
++        reports_verified_non_hi = (
++            getattr(subtitle, 'hearing_impaired_verifiable', False) is True
++            and getattr(subtitle, '_reported_hearing_impaired', None) is False
++        )
++        if (not reports_verified_non_hi and subtitle.text and subtitle.format == 'srt' and (hasattr(subtitle.language, 'hi') and
+                                                             not subtitle.language.hi) and
+                 parse_for_hi_regex(subtitle_text=subtitle.text, alpha3_language=subtitle.language.alpha3 if
+                                    (hasattr(subtitle, 'language') and hasattr(subtitle.language, 'alpha3')) else None)):
+diff --git a/tests/test_save_hi_metadata.py b/tests/test_save_hi_metadata.py
+new file mode 100644
+index 0000000..6b28465
+--- /dev/null
++++ b/tests/test_save_hi_metadata.py
+@@ -0,0 +1,81 @@
++"""Exercise the actual saver in isolation, with in-memory destinations only."""
++import ast
++import logging
++import os
++from pathlib import Path
++import re
++from types import SimpleNamespace
++import unittest
++
++
++def saver():
++    path = Path(__file__).resolve().parents[1] / 'custom_libs/subliminal_patch/core.py'
++    tree = ast.parse(path.read_text(encoding='utf-8'))
++    nodes = [node for node in tree.body if
++             isinstance(node, ast.FunctionDef) and node.name in ('save_subtitles', 'parse_for_hi_regex')
++             or isinstance(node, ast.Assign) and any(
++                 isinstance(target, ast.Name) and target.id.startswith('HI_REGEX_')
++                 for target in node.targets)]
++    namespace = dict(re=re, os=os, logger=logging.getLogger(__name__),
++                     SUBTITLE_FORMAT_EXTENSIONS={},
++                     UnicodeDammit=lambda value: SimpleNamespace(unicode_markup=value),
++                     get_subtitle_path=lambda path, language, **kw:
++                     'episode.es' + ('.hi' if kw['hi_tag'] else '') + '.srt')
++    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), 'exec'), namespace)
++    return namespace['save_subtitles']
++
++
++class SaveHiMetadataTests(unittest.TestCase):
++    def save(self, reported=False, verifiable=True, hi=False, provider='example',
++             missing=False, mods=None):
++        text = '1\n00:00:01,000 --> 00:00:02,000\n(ordinary dialogue)\n'
++        content = text.encode()
++        class Language:
++            alpha3 = 'spa'
++            forced = False
++        language = Language()
++        language.hi = hi
++        subtitle = SimpleNamespace(
++            provider_name=provider, hearing_impaired_verifiable=verifiable,
++            language=language,
++            hearing_impaired=hi, content=content, text=text, format='srt',
++            mods=mods or [], get_modified_content=lambda **kw: content)
++        if not missing:
++            subtitle._reported_hearing_impaired = reported
++        writes = []
++        saver()('episode.mkv', [subtitle],
++                write_subtitle=lambda path, data: writes.append((path, data)))
++        self.assertEqual(len(writes), 1)
++        self.assertEqual(writes[0][1], content)
++        return writes[0][0], subtitle
++
++    def test_explicit_verified_normal_preserves_path_and_content_for_any_provider(self):
++        for provider in ('moonfinbridge', 'another_hub_provider'):
++            with self.subTest(provider=provider):
++                path, subtitle = self.save(provider=provider)
++                self.assertEqual(path, 'episode.es.srt')
++                self.assertFalse(subtitle.language.hi)
++
++    def test_unknown_unverified_and_malformed_metadata_keep_heuristic(self):
++        for options in ({'missing': True}, {'reported': None}, {'reported': 0},
++                        {'reported': 'false'}, {'verifiable': False},
++                        {'verifiable': 1}, {'reported': True}):
++            with self.subTest(options=options):
++                path, subtitle = self.save(**options)
++                self.assertEqual(path, 'episode.es.hi.srt')
++                self.assertTrue(subtitle.language.hi)
++
++    def test_existing_hi_is_never_cleared_by_negative_metadata(self):
++        path, subtitle = self.save(hi=True)
++        self.assertEqual(path, 'episode.es.hi.srt')
++        self.assertTrue(subtitle.language.hi)
++
++    def test_explicit_remove_hi_mod_retains_existing_behavior(self):
++        path, subtitle = self.save(hi=True, reported=True, mods=['remove_HI'])
++        self.assertEqual(path, 'episode.es.srt')
++        self.assertFalse(subtitle.language.hi)
++        self.assertFalse(subtitle.hearing_impaired)
++
++
++if __name__ == '__main__':
++    unittest.main()
+-- 
+2.53.0.windows.3
+

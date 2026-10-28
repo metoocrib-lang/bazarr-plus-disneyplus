@@ -1,0 +1,5 @@
+**
+!Dockerfile
+!extractor/
+!extractor/*.py
+!extractor/entrypoint-agent.sh
