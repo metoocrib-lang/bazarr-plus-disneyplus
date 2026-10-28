@@ -1,63 +1,113 @@
 # Disney+ para Bazarr+
 
-Proveedor de subtítulos de Disney+ para Bazarr+, con un agente independiente
-y sesión privada en Docker. **No requiere Jellyfin ni su plugin.**
+Busca subtítulos de episodios de Disney+ desde Bazarr+ y permite guardarlos
+junto a los vídeos de tu biblioteca. Usa tu propia sesión de Disney+ mediante
+un agente en Docker. **No necesitas Jellyfin ni el plugin de Moonfin.**
 
-Estado: experimental. La versión 0.2.1 separa el código del proyecto original.
-El flujo anterior se probó con episodios reales; esta separación pasó pruebas
-offline y de arranque en un contenedor aislado. Después se migraron la sesión
-y la caché del laboratorio y se comprobó la conexión con Bazarr+ mediante el
-proveedor 0.2.1. La vigencia de la sesión en Disney+ sigue sin verificar.
-No está publicada en el Marketplace.
+> **Proyecto experimental — proveedor 0.2.1.** La conexión con Bazarr+ y la
+> descarga desde caché están comprobadas. La sesión migrada aún debe
+> verificarse contra Disney+. Antes de importar a una biblioteca real,
+> [revisa la corrección de compatibilidad HI](docs/HI-COMPATIBILITY.md).
+> No es todavía una instalación de un clic ni está en el Marketplace.
 
-## Funcionamiento
+## Qué puedes hacer
 
-1. Bazarr+ identifica el episodio y consulta el proveedor.
-2. El proveedor consulta la caché privada del agente Disney+.
-3. Si habilitas nuevas extracciones, el agente usa tu sesión para buscar el
-   episodio y preparar el SRT; el proveedor espera hasta 75 segundos por defecto.
-4. Bazarr+ muestra el resultado listo e importa el archivo cuando lo seleccionas.
+- Buscar subtítulos normales en español para episodios de series Disney+.
+- Reutilizar un SRT que el agente ya tenga guardado.
+- Permitir, de forma opcional, que una búsqueda solicite una extracción nueva.
+- Relacionar la numeración de tu biblioteca con la de Disney+.
+- Elegir el resultado desde Bazarr+ para que lo importe.
 
-El agente no necesita claves de Bazarr, Sonarr o Jellyfin, no monta la
-biblioteca y no importa archivos. Admite episodios y español normal; no
-películas ni pistas HI/forced. No obtiene claves DRM ni procesa pistas cifradas.
+Por ahora no admite películas, otros idiomas, otros servicios ni pistas
+HI/SDH o forzadas. No descarga vídeo ni descifra pistas protegidas.
+Tampoco garantiza que cada episodio tenga una pista accesible para tu cuenta.
 
-Las búsquedas nuevas están desactivadas de forma predeterminada. El proveedor
-no distingue búsquedas manuales de programadas ni sabe si ya existe español:
-mantén las tareas automáticas apagadas y selecciona episodios sin español.
-Si una extracción supera el plazo, repite la búsqueda después. El agente
-aplica un intervalo de 24 horas para no repetir solicitudes del mismo episodio,
-incluso después de un fallo; no implica que siga procesándose todo ese tiempo.
+## Cómo funciona
 
-## Instalación y sesión
+| Componente | Dónde funciona | Para qué sirve |
+|---|---|---|
+| **Proveedor** | En Bazarr+, instalado como ZIP en Provider Hub | Recibe búsquedas y devuelve resultados listos. |
+| **Agente** | En un contenedor Docker independiente | Mantiene tu sesión de Disney+ y guarda los SRT en una caché privada. |
 
-Consulta [Instalación](docs/INSTALLATION.md),
-[Migración desde el laboratorio](docs/MIGRATION.md) y
-[Compatibilidad HI](docs/HI-COMPATIBILITY.md).
-El resultado del arranque aislado está en [Verificación](docs/VERIFICATION.md).
-La versión actual de Bazarr+ requiere la corrección HI descrita antes de
-utilizar importaciones sobre una biblioteca real.
-
-## Desarrollo y paquetes
-
-```shell
-python -m unittest discover -s extractor/tests
-python scripts/build_bazarr_plus_bundle.py --output dist/disneyplus-draft.zip
-python scripts/build_bazarr_plus_bundle.py --commit COMMIT_COMPLETO --output dist/disneyplus-release.zip
+```mermaid
+flowchart LR
+    A[Buscas en Bazarr+] --> B[Proveedor Disney+]
+    B --> C[Agente privado]
+    C --> D[SRT almacenado]
+    C -. Extracción opcional .-> E[Disney+ con tu sesión]
+    E --> D
+    D --> B
+    B --> F[Eliges el resultado]
+    F --> G[Bazarr+ importa el SRT]
 ```
 
-El ZIP contiene únicamente `provider.py` y `provider.json`. El modo `--commit`
-lee los archivos del commit, recalcula hashes y fija su procedencia en el
-manifiesto del paquete. Los ceros en el manifiesto fuente son un marcador de
-desarrollo, no una revisión publicada. No sobrescribe paquetes existentes.
+El agente no necesita acceso a tus vídeos ni claves de Bazarr, Sonarr o
+Jellyfin. **Bazarr+ es quien escribe el SRT en la biblioteca.**
 
-Se conserva `provider_id=moonfinbridge` para que las instalaciones existentes
-conserven su identidad y sean compatibles con la protección HI del laboratorio.
-El nombre interno no representa una dependencia de Moonfin o Jellyfin.
+## Por dónde empezar
 
-## Procedencia
+| Si quieres… | Lee… |
+|---|---|
+| Instalarlo por primera vez | [Instalación paso a paso](docs/INSTALLATION.md) |
+| Configurar una serie o el mapa de episodios | [Configuración y ejemplos](docs/CONFIGURATION.md) |
+| Resolver un problema de conexión o búsqueda | [Solución de problemas](docs/TROUBLESHOOTING.md) |
+| Migrar desde el agente anterior | [Migración y reversión](docs/MIGRATION.md) |
+| Entender el requisito HI | [Compatibilidad con Bazarr+](docs/HI-COMPATIBILITY.md) |
+| Modificar código o generar el ZIP | [Desarrollo](docs/DEVELOPMENT.md) |
+| Saber qué está terminado y qué falta | [Estado y próximos pasos](docs/ROADMAP.md) |
 
-Separado de [Jellyfin.Plugin.SubtitleBridge](https://github.com/metoocrib-lang/Jellyfin.Plugin.SubtitleBridge),
-revisión `d6c181241aa51feaa630882c592160a43b4d21e5` (revisión local de origen al
-separar). Se trasladaron únicamente archivos de código seleccionados; no
-sesiones, tokens, configuraciones del servidor, medios ni subtítulos reales.
+Necesitas Bazarr+ con Provider Hub, Docker con Compose, acceso a Disney+ con
+tu cuenta y una biblioteca de series que Bazarr+ ya identifique. El Compose
+incluido instala el agente; no instala Bazarr+. El entorno probado es Docker
+en Linux x86_64, controlado desde Windows. Otras plataformas no están verificadas.
+
+## Primera búsqueda: qué esperar
+
+1. Inicias sesión en Disney+ desde el navegador del agente.
+2. Configuras el token privado y el mapa de la serie en el proveedor.
+3. Mantienes apagadas las búsquedas programadas de Bazarr+.
+4. Buscas manualmente un episodio sin subtítulos en español.
+5. Si el SRT está guardado, aparece inmediatamente. Si no, solo se solicita
+   una extracción cuando activas `enable_requests`.
+6. El proveedor puede esperar hasta 75 segundos por defecto. Si el agente
+   necesita más tiempo, vuelve a buscar después.
+
+**Con `enable_requests=false`, una caché vacía da una búsqueda sin resultados.**
+Es el comportamiento inicial esperado. El proveedor no sabe si el episodio
+ya tiene español: selecciona los episodios sin subtítulos en Bazarr+.
+
+## Preguntas frecuentes
+
+**¿Por qué aparecen nombres como `moonfinbridge`?**
+
+Es el identificador interno original. Se conserva para actualizar las
+instalaciones existentes y mantener la compatibilidad HI. No implica una
+dependencia de Jellyfin.
+
+**¿Funciona con Bazarr oficial?**
+
+Este paquete utiliza el Provider Hub de **Bazarr+**. No se instala como
+proveedor en Bazarr oficial mediante este procedimiento.
+
+**¿Dónde introduzco mi contraseña de Disney+?**
+
+Solo en Disney+, dentro del navegador del agente. El token del proveedor y
+la contraseña de noVNC son credenciales distintas, creadas localmente.
+
+**¿Activa sincronización o búsquedas automáticas?**
+
+No las activa por sí mismo. La sincronización depende de tu archivo de vídeo;
+no es necesaria para consultar la caché ni para instalar el proveedor.
+
+## Estado comprobado
+
+Se verificaron el arranque del agente, su autenticación, Chromium, noVNC, una
+descarga sintética y la migración de 17 SRT con integridad comprobada. El
+proveedor 0.2.1 se probó mediante la búsqueda de Bazarr+ y su worker real.
+La extracción real se había probado en el agente anterior; aún no se ha
+repetido con la sesión migrada del agente independiente.
+
+Los resultados están en [Verificación](docs/VERIFICATION.md) y
+[Migración](docs/MIGRATION.md). El código procede de
+[Jellyfin.Plugin.SubtitleBridge](https://github.com/metoocrib-lang/Jellyfin.Plugin.SubtitleBridge),
+pero esta integración funciona de forma independiente.
