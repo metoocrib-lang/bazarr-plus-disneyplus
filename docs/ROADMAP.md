@@ -14,6 +14,9 @@ funciones disponibles antes de que se implementen y prueben.
 - Migración de perfil y 17 SRT con verificación de integridad.
 - Búsqueda nativa de Bazarr+ y conservación de la configuración tras actualizar.
 - Extracción/importación real comprobada anteriormente con el agente original.
+- Pruebas automáticas y documentación aprobadas en Python 3.12, 3.13 y 3.14;
+  ZIP con revisión y hash generado por GitHub Actions.
+  [Primera ejecución completa](https://github.com/metoocrib-lang/bazarr-plus-disneyplus/actions/runs/40639452649).
 
 ## Pendientes, por prioridad
 
@@ -22,8 +25,7 @@ funciones disponibles antes de que se implementen y prueben.
 | Verificar la sesión migrada | Confirmar que Disney+ acepta el perfil del agente independiente. | Pendiente; no confundir con salud de la API. |
 | Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | Parche preparado y probado aisladamente; no enviado ni aceptado por upstream. |
 | Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Pendiente; actualmente `pending` puede durar 24 horas tras un fallo. |
-| Automatizar pruebas y empaquetado | Detectar regresiones en cada cambio y producir un ZIP descargable. | Flujo preparado para Python 3.12–3.14; primera ejecución remota pendiente de comprobar. |
-| Distribuir una versión instalable | Publicar un artefacto con revisión y hash, y evaluar incorporación al catálogo. | Código publicado; sin publicación de Marketplace ni release adjunta. |
+| Publicar una versión estable | Ofrecer un paquete de distribución permanente y evaluar incorporación al catálogo. | ZIP disponible como artefacto de CI durante 30 días; sin Marketplace ni release estable adjunta. |
 | Simplificar la configuración | Evitar errores al editar mapas JSON y facilitar el diagnóstico de sesión. | Pendiente. |
 
 La política «solo episodios sin español» todavía se controla desde Bazarr+,

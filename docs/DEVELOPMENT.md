@@ -65,6 +65,9 @@ las pruebas offline y `python scripts/check_docs.py` en Python 3.12, 3.13 y
 3.14. Se activa en cambios de `main`, pull requests y ejecuciones manuales.
 No contacta Disney+ ni utiliza perfiles, secretos o contenedores del laboratorio.
 
+La [primera ejecución](https://github.com/metoocrib-lang/bazarr-plus-disneyplus/actions/runs/40639452649)
+completó correctamente las tres versiones de Python y publicó el artefacto.
+
 Cuando todas las pruebas pasan, las ejecuciones sobre `main` y las manuales
 generan el paquete desde el commit de esa ejecución. El artefacto incluye
 `disneyplus-provider.zip`, `build-info.json` y `SHA256SUMS`, y se conserva 30

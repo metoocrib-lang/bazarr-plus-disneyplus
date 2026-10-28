@@ -89,6 +89,14 @@ dependencia de Jellyfin.
 Este paquete utiliza el Provider Hub de **Bazarr+**. No se instala como
 proveedor en Bazarr oficial mediante este procedimiento.
 
+**¿Dónde consigo el ZIP?**
+
+En los artefactos de una ejecución satisfactoria de
+[GitHub Actions](https://github.com/metoocrib-lang/bazarr-plus-disneyplus/actions/workflows/check.yml),
+o generándolo con los comandos de instalación. Dentro de la descarga de
+Actions está `disneyplus-provider.zip`, el archivo que debes cargar en Provider
+Hub. Los artefactos duran 30 días y no equivalen a una release estable.
+
 **¿Dónde introduzco mi contraseña de Disney+?**
 
 Solo en Disney+, dentro del navegador del agente. El token del proveedor y
