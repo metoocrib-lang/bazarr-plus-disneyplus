@@ -22,8 +22,9 @@ El laboratorio conserva una imagen con protección específica de
 `moonfinbridge`. No retirar esa imagen hasta validar una versión oficial que
 incluya la corrección. El nuevo repositorio no elimina esta necesidad.
 
-La propuesta general está en [el parche incluido](../patches/bazarr-verified-non-hi.patch), basada
-en el commit anterior de LavX/bazarr. Respeta metadatos explícitos verificables,
+La propuesta general está en el [PR #789](https://github.com/LavX/bazarr/pull/789),
+dirigido a `development` desde `effe5a9cc6e21910ab659ab41e0481479aa5b5f0`.
+El [parche incluido](../patches/bazarr-verified-non-hi.patch) corresponde a esa propuesta. Respeta metadatos explícitos verificables,
 conserva la heurística cuando faltan datos y no elimina flags HI existentes.
 Incluye pruebas aisladas del guardado: cuatro pruebas, once escenarios;
 los dos casos no-HI fallan antes de aplicar la corrección y pasan después.
@@ -37,7 +38,8 @@ git apply /ruta/bazarr-verified-non-hi.patch
 python tests/test_save_hi_metadata.py
 ```
 
-El parche está preparado, no aceptado ni publicado por upstream. No parchea
+El PR está publicado como borrador; no está aceptado ni incluido en una versión
+oficial. Su CI requiere aprobación de los mantenedores. No parchea
 contenedores automáticamente. La solicitud de incorporación a Bazarr+ es
 independiente de la publicación del proveedor en este repositorio.
 

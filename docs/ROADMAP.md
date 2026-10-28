@@ -25,10 +25,10 @@ funciones disponibles antes de que se implementen y prueben.
 | Trabajo | Resultado esperado | Estado |
 |---|---|---|
 | Verificar la sesión migrada | Comprobar acceso al catálogo con el perfil del agente independiente. | Comprobado para catálogo; reproducción y nueva extracción no repetidas. Véase [Migración](MIGRATION.md). |
-| Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | Parche preparado y probado aisladamente; no enviado ni aceptado por upstream. |
+| Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | [PR #789](https://github.com/LavX/bazarr/pull/789) abierto en borrador; CI requiere aprobación de los mantenedores. No incorporado todavía. |
 | Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Implementado y desplegado en 0.2.2; pruebas offline y sintéticas aprobadas. [Detalles](EXTRACTION-STATES.md). |
 | Publicar una versión estable | Ofrecer un paquete de distribución permanente y evaluar incorporación al catálogo. | ZIP disponible como artefacto de CI durante 30 días; sin Marketplace ni release estable adjunta. |
-| Simplificar la configuración | Evitar errores al editar mapas JSON y facilitar el diagnóstico de sesión. | Pendiente. |
+| Simplificar la configuración | Evitar errores al editar mapas JSON y facilitar el diagnóstico de sesión. | Validador offline con vista previa implementado; interfaz y diagnóstico de sesión pendientes. [Uso](CONFIGURATION.md). |
 
 La política «solo episodios sin español» todavía se controla desde Bazarr+,
 no desde el proveedor. No se ha habilitado un flujo automático de biblioteca.

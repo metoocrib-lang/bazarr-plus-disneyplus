@@ -1,20 +1,20 @@
-From d0c04eb4f9a22420d7425cc3b860ea3fac1e7602 Mon Sep 17 00:00:00 2001
-From: Codex <codex@local.invalid>
-Date: Tue, 27 Oct 2026 12:46:07 -0600
-Subject: [PATCH] Respect verified non-HI provider metadata when saving
- subtitles
-
----
- custom_libs/subliminal_patch/core.py |  9 +++-
- tests/test_save_hi_metadata.py       | 81 ++++++++++++++++++++++++++++
- 2 files changed, 89 insertions(+), 1 deletion(-)
- create mode 100644 tests/test_save_hi_metadata.py
-
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 7fb2133e..d19f25ed 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -597,6 +597,7 @@ jobs:
+             tests/bazarr/test_upgrade_subtitle_toggles.py \
+             tests/subliminal_patch/test_animetosho.py \
+             tests/subliminal_patch/test_core.py \
++            tests/test_save_hi_metadata.py \
+             tests/subliminal_patch/test_prioritized_satisfaction.py \
+             tests/subliminal_patch/test_core_persistent.py \
+             tests/subliminal_patch/test_opensubtitles_scraper.py \
 diff --git a/custom_libs/subliminal_patch/core.py b/custom_libs/subliminal_patch/core.py
-index 6e44b0f..ec3a41f 100644
+index 4508a083..200b5d96 100644
 --- a/custom_libs/subliminal_patch/core.py
 +++ b/custom_libs/subliminal_patch/core.py
-@@ -2075,7 +2075,14 @@ def save_subtitles(file_path, subtitles, single=False, directory=None, chmod=Non
+@@ -2147,7 +2147,14 @@ def save_subtitles(file_path, subtitles, single=False, directory=None, chmod=Non
              continue
  
          # create subtitle path
@@ -32,7 +32,7 @@ index 6e44b0f..ec3a41f 100644
                                     (hasattr(subtitle, 'language') and hasattr(subtitle.language, 'alpha3')) else None)):
 diff --git a/tests/test_save_hi_metadata.py b/tests/test_save_hi_metadata.py
 new file mode 100644
-index 0000000..6b28465
+index 00000000..6b284652
 --- /dev/null
 +++ b/tests/test_save_hi_metadata.py
 @@ -0,0 +1,81 @@
@@ -117,6 +117,3 @@ index 0000000..6b28465
 +
 +if __name__ == '__main__':
 +    unittest.main()
--- 
-2.53.0.windows.3
-

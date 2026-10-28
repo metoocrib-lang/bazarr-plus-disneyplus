@@ -88,6 +88,28 @@ caracteres en `series_json`.
 ]
 ```
 
+## Validar antes de pegar en Bazarr+
+
+Guarda solo la lista `series_json` en un archivo UTF-8 llamado `series.json`.
+No incluyas tokens ni el resto de la configuración. Desde el repositorio,
+con Python instalado:
+
+```shell
+python scripts/validate_series.py series.json
+python scripts/validate_series.py series.json --episode 123456 17 15
+```
+
+El segundo comando muestra qué episodio de Disney+ corresponde a T17E15.
+Con el ejemplo 2 devuelve T2E2. Si falta una regla, indica que el proveedor
+omitirá el episodio. No abre el navegador, consulta servicios ni modifica el
+archivo: valida sintaxis, URLs, límites, TVDB duplicados y solapamientos usando
+las reglas del proveedor. Además rechaza campos desconocidos y tipos ambiguos
+para detectar errores de edición antes de guardar la configuración.
+
+Códigos de salida: `0` válido, `1` error de entrada, `2` episodio sin equivalencia.
+Una validación correcta no confirma que la serie o los subtítulos existan en
+Disney+: todavía debes comprobar la correspondencia de títulos.
+
 ## Uso manual recomendado durante las pruebas
 
 Mantén desactivadas las búsquedas programadas y la mejora automática de
