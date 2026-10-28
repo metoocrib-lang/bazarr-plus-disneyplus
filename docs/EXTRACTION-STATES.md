@@ -45,7 +45,8 @@ se simula en estas pruebas: no se accede a Disney+ ni a la biblioteca.
 
 ## Actualización propuesta y reversión
 
-El laboratorio permanece en 0.2.1. Estos pasos requieren autorización antes
+El laboratorio se actualizó con autorización el 28 de octubre de 2026.
+Para otras instalaciones, estos pasos requieren autorización antes
 de detener, reiniciar o recrear servicios:
 
 1. Mantener solicitudes nuevas y tareas automáticas desactivadas; comprobar
@@ -66,3 +67,28 @@ por 0.2.1: reutilizarlo sin restaurar perdería los intervalos de reintento.
 El proveedor 0.2.2 puede permanecer con el agente anterior; también se puede
 restaurar el bundle previo y reiniciar Bazarr+ si se necesita una reversión completa.
 No eliminar volúmenes ni modificar la biblioteca para revertir.
+
+## Resultado del despliegue autorizado
+
+Código: `e954d94a3c44a6fe7d9ab0c486dbe2bbce4b3bc8`. Proveedor 0.2.2 activo,
+sin reinicio pendiente; prueba del worker aprobada. Agente 0.2.2 `healthy`,
+con conexión privada autenticada desde Bazarr+ y rechazo HTTP 401 sin token.
+
+Imagen: `sha256:fcd78e041cfad4605a6d3c43c742e0cb36940e9119bb04ec7a3be07cde21cce2`.
+ZIP: `sha256:0e81ab762b9a9db92e415cf12674df6d7aef427a0b8af62b8035e58437dde90b`.
+
+Se respaldaron configuración, base SQLite, bundle, estado y credenciales en
+almacenamiento privado. Se conservaron imagen y carpeta de despliegue 0.2.1.
+Un problema inicial de acceso a la carpeta privada se resolvió ejecutando el
+respaldo con UID 999:1000 de Bazarr+, sin ampliar permisos.
+
+Los estados `failed` e `interrupted`, su persistencia y la lectura de un SRT
+sintético se probaron en un proceso separado dentro de la imagen nueva, con
+estado temporal en `/tmp`. Esos datos se eliminaron al terminar; no entraron
+en la cola del servicio ni en la biblioteca. No se abrió Disney+.
+
+Los 17 SRT de caché conservan sus hashes. El historial de importación, mapa,
+volúmenes, puertos y redes se conservaron. Los otros 30 contenedores registrados
+conservaron ID, estado y tiempo de arranque. Solicitudes nuevas, tareas
+programadas y sincronización siguen desactivadas. La reversión está preparada,
+pero no se ha ejecutado.

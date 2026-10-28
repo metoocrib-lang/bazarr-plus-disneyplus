@@ -10,8 +10,8 @@ un agente en Docker. **No necesitas Jellyfin ni el plugin de Moonfin.**
 > [revisa la corrección de compatibilidad HI](docs/HI-COMPATIBILITY.md).
 > No es todavía una instalación de un clic ni está en el Marketplace.
 
-La versión 0.2.2 corrige los estados de extracción. Está probada offline; el
-laboratorio sigue en 0.2.1 hasta autorizar su actualización. Consulta el
+La versión 0.2.2 corrige los estados de extracción. Está probada offline y
+actualizada en el laboratorio con comprobaciones sintéticas. Consulta el
 [plan de actualización y reversión](docs/EXTRACTION-STATES.md).
 
 ## Qué puedes hacer
