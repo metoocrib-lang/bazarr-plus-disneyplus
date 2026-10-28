@@ -58,6 +58,28 @@ publica; verifica que la revisión sea accesible en GitHub antes de distribuir.
 El ZIP generado tiene metadatos de procedencia diferentes al manifiesto fuente;
 conserva su SHA-256 junto al artefacto.
 
+## Comprobaciones automáticas y artefactos
+
+El flujo [Tests and provider bundle](../.github/workflows/check.yml) ejecuta
+las pruebas offline y `python scripts/check_docs.py` en Python 3.12, 3.13 y
+3.14. Se activa en cambios de `main`, pull requests y ejecuciones manuales.
+No contacta Disney+ ni utiliza perfiles, secretos o contenedores del laboratorio.
+
+Cuando todas las pruebas pasan, las ejecuciones sobre `main` y las manuales
+generan el paquete desde el commit de esa ejecución. El artefacto incluye
+`disneyplus-provider.zip`, `build-info.json` y `SHA256SUMS`, y se conserva 30
+días. En una pull request se ejecutan las pruebas sin publicar el paquete.
+
+Para descargarlo, entra en la pestaña **Actions** del repositorio, elige una
+ejecución satisfactoria y abre su sección **Artifacts**. GitHub puede pedirte
+iniciar sesión. Descarga y descomprime el archivo del artefacto; el ZIP que
+se carga en Provider Hub es el `disneyplus-provider.zip` que contiene dentro.
+Un artefacto de CI no equivale a una release estable ni a una publicación en
+el Marketplace. La disponibilidad depende de que la ejecución termine bien.
+
+Las acciones oficiales están fijadas por SHA y el flujo solo solicita lectura
+del repositorio. No instala automáticamente el paquete ni despliega servicios.
+
 ## Cambios compatibles
 
 Conserva el identificador `moonfinbridge` para las actualizaciones existentes.

@@ -1,0 +1,63 @@
+name: Tests and provider bundle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Offline tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run offline regression tests
+        run: python -m unittest discover -s extractor/tests
+      - name: Check local documentation links and mapping examples
+        run: python scripts/check_docs.py
+
+  bundle:
+    name: Build provider ZIP
+    needs: tests
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Build from the exact checked-out commit
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          mkdir -p dist
+          python scripts/build_bazarr_plus_bundle.py --commit "$SOURCE_COMMIT" --output dist/disneyplus-provider.zip > dist/build-info.json
+          cd dist
+          sha256sum disneyplus-provider.zip > SHA256SUMS
+      - name: Upload ZIP and provenance
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: disneyplus-provider-${{ github.sha }}
+          path: |
+            dist/disneyplus-provider.zip
+            dist/build-info.json
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30

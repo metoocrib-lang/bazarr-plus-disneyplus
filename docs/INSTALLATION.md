@@ -123,6 +123,10 @@ quede libre. Un perfil guardado no garantiza que la sesión siga vigente.
 
 ## 5. Generar e instalar el proveedor
 
+Si existe una ejecución satisfactoria en **Actions**, puedes obtener el ZIP
+desde sus artefactos siguiendo [estas instrucciones](DEVELOPMENT.md).
+También puedes reproducir el paquete comprobado con los comandos siguientes.
+
 En el equipo donde tengas el repositorio, Git y Python, genera el ZIP del
 código 0.2.1 comprobado. No necesitas instalar Playwright en ese equipo:
 

@@ -22,7 +22,7 @@ funciones disponibles antes de que se implementen y prueben.
 | Verificar la sesión migrada | Confirmar que Disney+ acepta el perfil del agente independiente. | Pendiente; no confundir con salud de la API. |
 | Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | Parche preparado y probado aisladamente; no enviado ni aceptado por upstream. |
 | Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Pendiente; actualmente `pending` puede durar 24 horas tras un fallo. |
-| Automatizar pruebas y empaquetado | Detectar regresiones en cada cambio y producir un ZIP descargable. | Pendiente. |
+| Automatizar pruebas y empaquetado | Detectar regresiones en cada cambio y producir un ZIP descargable. | Flujo preparado para Python 3.12–3.14; primera ejecución remota pendiente de comprobar. |
 | Distribuir una versión instalable | Publicar un artefacto con revisión y hash, y evaluar incorporación al catálogo. | Código publicado; sin publicación de Marketplace ni release adjunta. |
 | Simplificar la configuración | Evitar errores al editar mapas JSON y facilitar el diagnóstico de sesión. | Pendiente. |
 
