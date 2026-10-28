@@ -4,8 +4,9 @@ Proveedor de subtítulos de Disney+ para Bazarr+, con un agente independiente
 y sesión privada en Docker. **No requiere Jellyfin ni su plugin.**
 
 Estado: experimental. La versión 0.2.1 separa el código del proyecto original.
-El flujo anterior se probó con episodios reales; esta separación dispone de
-pruebas offline y todavía no se ha desplegado sobre el laboratorio existente.
+El flujo anterior se probó con episodios reales; esta separación pasó pruebas
+offline y de arranque en un contenedor aislado. Todavía no sustituye el agente
+del laboratorio existente ni tiene una sesión Disney+ configurada.
 No está publicada en el Marketplace.
 
 ## Funcionamiento
@@ -32,6 +33,7 @@ incluso después de un fallo; no implica que siga procesándose todo ese tiempo.
 Consulta [Instalación](docs/INSTALLATION.md),
 [Migración desde el laboratorio](docs/MIGRATION.md) y
 [Compatibilidad HI](docs/HI-COMPATIBILITY.md).
+El resultado del arranque aislado está en [Verificación](docs/VERIFICATION.md).
 La versión actual de Bazarr+ requiere la corrección HI descrita antes de
 utilizar importaciones sobre una biblioteca real.
 

@@ -22,7 +22,10 @@ docker compose up -d --build
 
 El agente usa los volúmenes propios `browser` y `state`, usuario no-root,
 raíz de solo lectura y red de salida separada de su red privada.
-Esta imagen nueva aún requiere validar su arranque antes de usarla en producción.
+El arranque se validó en un entorno aislado; véase [Verificación](VERIFICATION.md).
+Antes de migrar una instalación existente, comprobar permisos y datos según
+la guía de migración. La sesión y la extracción real no se validaron en este
+contenedor nuevo.
 
 ## 2. Conexión de Bazarr+
 
