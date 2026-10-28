@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import queue
 import tempfile
+import sys
+from unittest.mock import MagicMock
 import unittest
 from unittest.mock import patch
 
@@ -141,13 +143,25 @@ class ProviderTests(unittest.TestCase):
 
     def test_cache_only_busy_and_zero_wait_never_poll(self):
         for enabled, state, wait in [(False, "pending", 75), (True, "busy", 75),
-                                     (True, "queued", 0), (True, "absent", 75)]:
+                                     (True, "queued", 0), (True, "absent", 75),
+                                     (True, "failed", 75), (True, "cooldown", 75),
+                                     (True, "interrupted", 75)]:
             with self.subTest(enabled=enabled, state=state, wait=wait):
                 candidate = provider.MoonfinBridgeProvider()
                 with patch.object(candidate, "_post", return_value=json.dumps({"state": state}).encode()) as post, \
                         patch.object(provider.time, "sleep", side_effect=AssertionError("must not wait")):
                     self.assertEqual(candidate.search(VIDEO, [LANGUAGE], dict(CONFIG, enable_requests=enabled, wait_seconds=wait)), [])
                 self.assertEqual(post.call_count, 1)
+
+    def test_poll_stops_on_failure_without_reenqueue(self):
+        for state in ('failed', 'interrupted', 'cooldown'):
+            candidate = provider.MoonfinBridgeProvider()
+            with patch.object(candidate, '_post', side_effect=[
+                    b'{"state":"processing"}', json.dumps({'state': state}).encode()]) as post, \
+                    patch.object(provider.time, 'sleep'):
+                self.assertEqual(candidate.search(VIDEO, [LANGUAGE], dict(CONFIG, enable_requests=True)), [])
+                self.assertEqual(post.call_count, 2)
+                self.assertFalse(post.call_args.args[1]['enqueue'])
 
     def test_wait_validation_before_network_and_unknown_state_rejected(self):
         candidate = provider.MoonfinBridgeProvider()
@@ -222,8 +236,75 @@ class AgentCacheTests(unittest.TestCase):
 
     def test_cooldown_cannot_create_duplicate_jobs(self):
         self.assertEqual(server.provider_lookup(self.request(enqueue=True))["state"], "queued")
-        self.assertEqual(server.provider_lookup(self.request(enqueue=True))["state"], "pending")
+        self.assertEqual(server.provider_lookup(self.request(enqueue=True))["state"], "queued")
         self.assertEqual(self.queue.qsize(), 1)
+
+    def test_failed_job_persists_and_retry_requires_opt_in_after_cooldown(self):
+        with patch.object(server.time, "time", return_value=100000):
+            server.provider_lookup(self.request(enqueue=True))
+            job = self.queue.get_nowait()
+            with patch.object(server, "BROWSER_LOCK") as browser:
+                browser.acquire.return_value = False
+                server.process_job(job)
+            failed = server.provider_lookup(self.request())
+            self.assertEqual(failed, {"state": "failed", "retry_after_seconds": 86400})
+            self.assertEqual(server.provider_lookup(self.request(enqueue=True)), failed)
+            self.assertTrue(self.queue.empty())
+            server.LAST_RUN.clear()
+            server.load_previous()
+            self.assertEqual(server.provider_lookup(self.request()), failed)
+        with patch.object(server.time, "time", return_value=186401):
+            self.assertEqual(server.provider_lookup(self.request())["retry_after_seconds"], 0)
+            self.assertTrue(self.queue.empty())
+            self.assertEqual(server.provider_lookup(self.request(enqueue=True))["state"], "queued")
+            self.assertEqual(self.queue.qsize(), 1)
+
+    def test_restart_marks_active_work_interrupted_and_loads_legacy_timestamps(self):
+        with patch.object(server.time, "time", return_value=100000):
+            server.provider_lookup(self.request(enqueue=True))
+            job = self.queue.get_nowait()
+            server.job_state(job, "processing")
+            self.assertEqual(server.provider_lookup(self.request())["state"], "processing")
+            server.LAST_RUN.clear()
+            server.load_previous()
+            self.assertEqual(server.provider_lookup(self.request())["state"], "interrupted")
+            server.PERSIST.write_text(json.dumps({job["attempt_key"]: 100000}))
+            server.LAST_RUN.clear()
+            server.load_previous()
+            self.assertEqual(server.provider_lookup(self.request()),
+                             {"state": "cooldown", "retry_after_seconds": 86400})
+
+    def test_active_job_never_duplicates_even_after_retry_interval(self):
+        with patch.object(server.time, "time", return_value=100000):
+            server.provider_lookup(self.request(enqueue=True))
+        with patch.object(server.time, "time", return_value=200000):
+            self.assertEqual(server.provider_lookup(self.request(enqueue=True))["state"], "queued")
+            self.assertEqual(self.queue.qsize(), 1)
+
+    def test_worker_success_and_extractor_failure_without_browser(self):
+        for failure in (False, True):
+            with self.subTest(failure=failure):
+                server.LAST_RUN.clear()
+                server.provider_lookup(self.request(enqueue=True))
+                job = self.queue.get_nowait()
+                api = MagicMock()
+                context = api.sync_playwright.return_value.__enter__.return_value.chromium.launch_persistent_context.return_value
+                with patch.dict(sys.modules, {'playwright.sync_api': api}), \
+                        patch.object(server, 'match_episode', return_value='unused'), \
+                        patch.object(server, 'DisneyBrowserExtractor') as extractor, \
+                        patch.object(server, 'save_cached') as save:
+                    def extract(*args):
+                        self.assertEqual(server.provider_lookup(self.request())["state"], "processing")
+                        if failure:
+                            raise server.SubtitleError('pista cifrada')
+                        return SRT
+                    extractor.return_value.extract.side_effect = extract
+                    server.process_job(job)
+                    context.close.assert_called_once()
+                    self.assertEqual(server.LAST_RUN[job['attempt_key']]['state'],
+                                     'failed' if failure else 'complete')
+                    self.assertEqual(save.call_count, 0 if failure else 1)
+                self.assertFalse(server.BROWSER_LOCK.locked())
 
     def test_invalid_job_and_unsafe_cache_id(self):
         with self.assertRaises(ValueError):

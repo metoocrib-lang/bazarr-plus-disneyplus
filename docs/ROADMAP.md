@@ -26,7 +26,7 @@ funciones disponibles antes de que se implementen y prueben.
 |---|---|---|
 | Verificar la sesión migrada | Comprobar acceso al catálogo con el perfil del agente independiente. | Comprobado para catálogo; reproducción y nueva extracción no repetidas. Véase [Migración](MIGRATION.md). |
 | Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | Parche preparado y probado aisladamente; no enviado ni aceptado por upstream. |
-| Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Pendiente; actualmente `pending` puede durar 24 horas tras un fallo. |
+| Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Implementado en 0.2.2 y probado offline; despliegue pendiente de autorización. [Detalles](EXTRACTION-STATES.md). |
 | Publicar una versión estable | Ofrecer un paquete de distribución permanente y evaluar incorporación al catálogo. | ZIP disponible como artefacto de CI durante 30 días; sin Marketplace ni release estable adjunta. |
 | Simplificar la configuración | Evitar errores al editar mapas JSON y facilitar el diagnóstico de sesión. | Pendiente. |
 

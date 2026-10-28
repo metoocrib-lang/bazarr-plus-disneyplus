@@ -41,7 +41,11 @@ Consulta `events` en la salida de `status`. Puede indicar
 no necesariamente el que ya está procesando el navegador. Reiniciar el
 contenedor no elimina el intervalo de espera porque se guarda en el volumen.
 No borres el estado o el perfil para forzar reintentos: podrías perder información
-útil. Una gestión más clara de fallos y reintentos está [pendiente](ROADMAP.md).
+útil. La versión 0.2.2 distingue `queued`, `processing`, `failed`,
+`interrupted` y `cooldown`, e informa `retry_after_seconds` en las respuestas
+de búsqueda cuando corresponde. El proveedor deja de esperar al detectar
+un fallo. Véanse [estados y actualización](EXTRACTION-STATES.md).
+Estos nombres son estados de API, no nuevas etiquetas de la interfaz Bazarr+.
 
 ## Qué significa el estado de la sesión
 

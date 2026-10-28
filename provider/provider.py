@@ -181,20 +181,21 @@ class MoonfinBridgeProvider:
         def lookup(request):
             result = json.loads(self._post("/v1/provider/lookup", request, config).decode("utf-8"))
             if not isinstance(result, dict) or result.get("state") not in (
-                    "ready", "queued", "pending", "busy", "absent"):
+                    "ready", "queued", "pending", "processing", "busy", "absent",
+                    "failed", "interrupted", "cooldown"):
                 raise ValueError("Estado de extracción no válido")
             return result
 
         response = lookup(body)
         # Cache-only searches must stay fast, including when another search
         # already has an extraction in flight. Queue saturation is not a job.
-        if not body["enqueue"] or response["state"] not in ("queued", "pending"):
+        if not body["enqueue"] or response["state"] not in ("queued", "pending", "processing"):
             return response
         poll = dict(body, enqueue=False)
         while deadline - time.monotonic() >= _POLL_SECONDS + _HTTP_TIMEOUT:
             time.sleep(_POLL_SECONDS)
             response = lookup(poll)
-            if response["state"] in ("ready", "busy"):
+            if response["state"] in ("ready", "busy", "failed", "interrupted", "cooldown"):
                 break
             # Older agents return absent for read-only checks while working.
         return response

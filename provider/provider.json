@@ -2,7 +2,7 @@
   "schema_version": 1,
   "provider_id": "moonfinbridge",
   "name": "Disney+ (independent agent)",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Disney+ subtitles through an independent private agent. Optional bounded wait during search; no Jellyfin plugin required.",
   "api_version": "bazarr.provider-hub.v1",
   "entry_module": "provider",
@@ -60,9 +60,9 @@
     "spa"
   ],
   "files": {
-    "provider.py": "35894d8615b348890f474548c15f9eaa418e25dbae4fc5b0d50013a22b888cfc"
+    "provider.py": "d6110d4139c387c83fe75321d3a30827b7c04e4491461b95d021c21dd511844c"
   },
-  "bundle_sha256": "9d5fca79d105a20ae87e52ccfd1859291cad0ff7048aa723099a4a287a46265e",
+  "bundle_sha256": "39399a3ec7391e8374cf37fffe36e9fd06113723b45456f9957849ab5ae643ea",
   "source": {
     "type": "github",
     "repo": "metoocrib-lang/bazarr-plus-disneyplus",

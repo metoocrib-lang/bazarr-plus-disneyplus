@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import queue
@@ -25,6 +26,7 @@ MAX_JSON = 180_000
 MAX_JOBS = 30
 RETRY_SECONDS = 24 * 3600
 LOCK = threading.Lock()
+PERSIST_LOCK = threading.Lock()
 BROWSER_LOCK = threading.Lock()
 QUEUE = queue.Queue(maxsize=MAX_JOBS)
 EVENTS = deque(maxlen=100)
@@ -50,13 +52,16 @@ def add_event(job, state):
 
 
 def remember():
-    PERSIST.parent.mkdir(parents=True, exist_ok=True)
-    temporary = PERSIST.with_suffix(".tmp")
-    with LOCK:
-        data = dict(LAST_RUN)
-    temporary.write_text(json.dumps(data), encoding="utf-8")
-    os.chmod(temporary, 0o600)
-    temporary.replace(PERSIST)
+    # Serialize writers before taking a snapshot: no shared .tmp collision or
+    # older snapshot replacing a more recent worker result.
+    with PERSIST_LOCK:
+        PERSIST.parent.mkdir(parents=True, exist_ok=True)
+        temporary = PERSIST.with_suffix(".tmp")
+        with LOCK:
+            data = dict(LAST_RUN)
+        temporary.write_text(json.dumps(data), encoding="utf-8")
+        os.chmod(temporary, 0o600)
+        temporary.replace(PERSIST)
 
 
 def load_previous():
@@ -64,12 +69,32 @@ def load_previous():
         return
     try:
         data = json.loads(PERSIST.read_text(encoding="utf-8"))
-        if isinstance(data, dict):
-            with LOCK:
-                LAST_RUN.update({str(key): float(value) for key, value in data.items()
-                                 if isinstance(value, (int, float))})
+        if not isinstance(data, dict):
+            return
+        restored = {}
+        for key, value in data.items():
+            # 0.2.1 stores timestamps only; it cannot tell us the outcome.
+            at = value.get("at") if isinstance(value, dict) else value
+            if type(at) not in (int, float) or not math.isfinite(at) or at < 0:
+                continue
+            state = value.get("state") if isinstance(value, dict) else "cooldown"
+            if state in ("queued", "processing"):
+                # The queue is not persistent. Never claim abandoned work is active.
+                state = "interrupted"
+            if state not in ("failed", "interrupted", "cooldown", "complete"):
+                state = "cooldown"
+            restored[str(key)] = {"at": at, "state": state}
+        with LOCK:
+            LAST_RUN.update(restored)
     except (ValueError, OSError):
         pass
+
+
+def job_state(job, state):
+    with LOCK:
+        previous = LAST_RUN[job["attempt_key"]]
+        LAST_RUN[job["attempt_key"]] = {**previous, "state": state}
+    remember()
 
 
 def provider_lookup(data):
@@ -80,16 +105,24 @@ def provider_lookup(data):
     if cached is not None:
         return {"state": "ready", "id": identifier,
                 "sha256": hashlib.sha256(cached).hexdigest()}
-    if not request["enqueue"]:
-        return {"state": "absent"}
     key = "bazarrplus:" + identifier
     now = time.time()
     with LOCK:
-        if now - LAST_RUN.get(key, 0) < RETRY_SECONDS:
-            return {"state": "pending"}
+        previous = LAST_RUN.get(key)
+        if previous:
+            state = previous["state"]
+            if state in ("queued", "processing"):
+                return {"state": state}
+            remaining = max(0, math.ceil(previous["at"] + RETRY_SECONDS - now))
+            if remaining or not request["enqueue"]:
+                return {"state": state if state in ("failed", "interrupted") else "cooldown",
+                        "retry_after_seconds": remaining}
+        if not request["enqueue"]:
+            return {"state": "absent"}
         if QUEUE.full():
             return {"state": "busy"}
-        LAST_RUN[key] = now
+        LAST_RUN[key] = {"at": now, "state": "queued"}
+        job["attempt_key"] = key
         # No Bazarr key/url is sent or stored in provider-only jobs.
         QUEUE.put_nowait(job)
     add_event(job, "en_cola_bazarr_plus")
@@ -134,46 +167,59 @@ def start_session(provider: str):
     return {"started": True, "message": "Abre noVNC por túnel SSH y entra a Disney+; ventana de 4 minutos"}
 
 
+def process_job(job):
+    outcome = "failed"
+    try:
+        if not BROWSER_LOCK.acquire(timeout=300):
+            add_event(job, "navegador_ocupado")
+            return
+        try:
+            job_state(job, "processing")
+            add_event(job, "procesando")
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                context = p.chromium.launch_persistent_context(
+                    user_data_dir=str(PROFILE / "disney"), headless=False,
+                    accept_downloads=False, args=["--disable-dev-shm-usage"],
+                )
+                try:
+                    page = context.pages[0] if context.pages else context.new_page()
+                    episode_url = match_episode(
+                        page, job["series_url"], job["season"], job["episode"]
+                    )
+                    srt = DisneyBrowserExtractor(context, page).extract(
+                        episode_url, job["language"]
+                    )
+                finally:
+                    context.close()
+            # Bazarr+ alone owns library import; this agent only fills its cache.
+            save_cached(job, srt)
+            outcome = "complete"
+            add_event(job, "srt_listo_bazarr_plus")
+        finally:
+            BROWSER_LOCK.release()
+    except SubtitleError as error:
+        # Only known, safe static errors (no URLs or HTTP response bodies).
+        if "catálogo" in str(error):
+            add_event(job, "episodio_no_identificado")
+        elif "cifrada" in str(error):
+            add_event(job, "pista_cifrada_no_admitida")
+        else:
+            add_event(job, "sin_subtitulo_accesible_o_sesion")
+    except Exception:
+        add_event(job, "error_en_extraccion")
+    finally:
+        job_state(job, outcome)
+
+
 def worker():
     while True:
         job = QUEUE.get()
         try:
-            if not BROWSER_LOCK.acquire(timeout=300):
-                add_event(job, "navegador_ocupado")
-                continue
-            try:
-                add_event(job, "procesando")
-                from playwright.sync_api import sync_playwright
-                with sync_playwright() as p:
-                    context = p.chromium.launch_persistent_context(
-                        user_data_dir=str(PROFILE / "disney"), headless=False,
-                        accept_downloads=False, args=["--disable-dev-shm-usage"],
-                    )
-                    try:
-                        page = context.pages[0] if context.pages else context.new_page()
-                        episode_url = match_episode(
-                            page, job["series_url"], job["season"], job["episode"]
-                        )
-                        srt = DisneyBrowserExtractor(context, page).extract(
-                            episode_url, job["language"]
-                        )
-                    finally:
-                        context.close()
-                # Bazarr+ alone owns library import; this agent only fills its cache.
-                save_cached(job, srt)
-                add_event(job, "srt_listo_bazarr_plus")
-            finally:
-                BROWSER_LOCK.release()
-        except SubtitleError as error:
-            # Only known, safe static errors (no URLs or HTTP response bodies).
-            if "catálogo" in str(error):
-                add_event(job, "episodio_no_identificado")
-            elif "cifrada" in str(error):
-                add_event(job, "pista_cifrada_no_admitida")
-            else:
-                add_event(job, "sin_subtitulo_accesible_o_sesion")
-        except Exception:
-            add_event(job, "error_en_extraccion")
+            process_job(job)
+        except OSError:
+            # An unavailable state volume must not permanently kill the worker.
+            add_event(job, "error_guardando_estado")
         finally:
             QUEUE.task_done()
 

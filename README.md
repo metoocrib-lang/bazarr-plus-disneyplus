@@ -4,11 +4,15 @@ Busca subtítulos de episodios de Disney+ desde Bazarr+ y permite guardarlos
 junto a los vídeos de tu biblioteca. Usa tu propia sesión de Disney+ mediante
 un agente en Docker. **No necesitas Jellyfin ni el plugin de Moonfin.**
 
-> **Proyecto experimental — proveedor 0.2.1.** La conexión con Bazarr+ y la
+> **Proyecto experimental — proveedor 0.2.2.** La conexión con Bazarr+ y la
 > descarga desde caché están comprobadas. El perfil migrado abre el catálogo
 > de Disney+; no se ha repetido una extracción con él. Antes de importar a una biblioteca real,
 > [revisa la corrección de compatibilidad HI](docs/HI-COMPATIBILITY.md).
 > No es todavía una instalación de un clic ni está en el Marketplace.
+
+La versión 0.2.2 corrige los estados de extracción. Está probada offline; el
+laboratorio sigue en 0.2.1 hasta autorizar su actualización. Consulta el
+[plan de actualización y reversión](docs/EXTRACTION-STATES.md).
 
 ## Qué puedes hacer
 
