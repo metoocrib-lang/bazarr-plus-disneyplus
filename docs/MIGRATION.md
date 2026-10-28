@@ -20,8 +20,19 @@ caché devolvieron el SRT esperado con hash correcto, sin importarlo.
 
 No se hicieron nuevas extracciones. El historial de importaciones no cambió.
 Solicitudes nuevas, tareas automáticas y sincronización siguen desactivadas.
-El perfil copiado aún no se ha comprobado contra Disney+: una copia íntegra
-no garantiza que la sesión sea aceptada por el servicio.
+Una comprobación posterior abrió el catálogo de Disney+ usando una copia
+temporal del perfil migrado, dentro del agente independiente. La página mostró
+selector de temporadas, 15 enlaces de reproducción y un control de perfil,
+sin redirigir al inicio de sesión ni mostrar controles de acceso o suscripción.
+Esto aporta evidencia de acceso al catálogo con el perfil conservado; no
+confirma reproducción ni extracción de subtítulos.
+
+No se siguieron enlaces de reproducción. Se bloquearon las solicitudes de
+tipo multimedia y las extensiones de manifiestos, segmentos y subtítulos;
+ninguna solicitud coincidió con esos filtros. No se descargaron subtítulos.
+El navegador se cerró y la copia temporal se eliminó, sin modificar el perfil
+original. El estado de API `no_validada` permanece: este diagnóstico externo
+no cambia el estado en memoria del agente.
 
 La red añadida está documentada en un override Compose del despliegue y su
 wrapper. Las futuras recreaciones de Bazarr+ deben incluir ese override;

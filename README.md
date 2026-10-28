@@ -5,8 +5,8 @@ junto a los vídeos de tu biblioteca. Usa tu propia sesión de Disney+ mediante
 un agente en Docker. **No necesitas Jellyfin ni el plugin de Moonfin.**
 
 > **Proyecto experimental — proveedor 0.2.1.** La conexión con Bazarr+ y la
-> descarga desde caché están comprobadas. La sesión migrada aún debe
-> verificarse contra Disney+. Antes de importar a una biblioteca real,
+> descarga desde caché están comprobadas. El perfil migrado abre el catálogo
+> de Disney+; no se ha repetido una extracción con él. Antes de importar a una biblioteca real,
 > [revisa la corrección de compatibilidad HI](docs/HI-COMPATIBILITY.md).
 > No es todavía una instalación de un clic ni está en el Marketplace.
 

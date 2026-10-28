@@ -12,6 +12,8 @@ funciones disponibles antes de que se implementen y prueben.
 - Agente Docker aislado, API autenticada, noVNC y Chromium funcionales.
 - Búsqueda con espera acotada y descarga desde caché en el worker real.
 - Migración de perfil y 17 SRT con verificación de integridad.
+- Catálogo Disney+ accesible con una copia temporal del perfil migrado:
+  temporadas y control de perfil visibles, sin reproducción ni extracción.
 - Búsqueda nativa de Bazarr+ y conservación de la configuración tras actualizar.
 - Extracción/importación real comprobada anteriormente con el agente original.
 - Pruebas automáticas y documentación aprobadas en Python 3.12, 3.13 y 3.14;
@@ -22,7 +24,7 @@ funciones disponibles antes de que se implementen y prueben.
 
 | Trabajo | Resultado esperado | Estado |
 |---|---|---|
-| Verificar la sesión migrada | Confirmar que Disney+ acepta el perfil del agente independiente. | Pendiente; no confundir con salud de la API. |
+| Verificar la sesión migrada | Comprobar acceso al catálogo con el perfil del agente independiente. | Comprobado para catálogo; reproducción y nueva extracción no repetidas. Véase [Migración](MIGRATION.md). |
 | Corregir HI en el host oficial | Importar pistas normales sin depender de la imagen personalizada. | Parche preparado y probado aisladamente; no enviado ni aceptado por upstream. |
 | Clarificar fallos y reintentos | Distinguir en cola, procesando, fallido y bloqueado por intervalo. | Pendiente; actualmente `pending` puede durar 24 horas tras un fallo. |
 | Publicar una versión estable | Ofrecer un paquete de distribución permanente y evaluar incorporación al catálogo. | ZIP disponible como artefacto de CI durante 30 días; sin Marketplace ni release estable adjunta. |
